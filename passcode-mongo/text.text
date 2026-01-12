@@ -1,0 +1,177 @@
+import React, { useRef, useState, useEffect } from 'react'
+import { v4 as uuidv4 } from 'uuid';
+
+const Manager = () => {
+  const passwordRef = useRef();
+
+  const showPassword = () => {
+    if (passwordRef.current) {
+      passwordRef.current.type =
+        passwordRef.current.type === "password" ? "text" : "password";
+    }
+  };
+
+  const [passwordArray, setPasswordArray] = useState([]);
+  const [form, setForm] = useState({ link: "", site: "", username: "", password: "" });
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // ✅ FIX: these functions must use same case everywhere
+  const editPassword = (id) => {
+    console.log("Editing Password with id", id);
+  };
+
+  const deletePassword = (id) => {
+    console.log("Deleting Password with id", id);
+  };
+
+  const savePassword = () => {
+    const newEntry = { ...form, id: uuidv4() };
+
+    const isDuplicate = passwordArray.some(
+      (item) =>
+        item.site.toLowerCase() === form.site.toLowerCase() &&
+        item.username.toLowerCase() === form.username.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      alert("This site + username is already saved!");
+      return;
+    }
+
+    setPasswordArray([...passwordArray, newEntry]);
+    localStorage.setItem("passwords", JSON.stringify([...passwordArray, newEntry]));
+    console.log([...passwordArray, form]);
+  };
+
+  // ✅ FIX: useEffect should NOT be inside savePassword
+  useEffect(() => {
+    let passwords = localStorage.getItem("passwords");
+    if (passwords) {
+      setPasswordArray(JSON.parse(passwords));
+    }
+  }, []);
+
+  return (
+    <>
+      <div className="container bg-gray-900 text-white flex flex-col items-center h-screen">
+        {/* Form Section */}
+        <div className="input flex flex-col items-center w-120 py-5 my-5 rounded-2xl gap-5 h-80 bg-gray-700 shadow-lg border-2">
+          <h1>Your Own Password Manager</h1>
+          <input value={form.link} onChange={handleChange} name='link' type="text" placeholder="link" className="link p-2 rounded-full w-96 h-8 bg-gray-700 border border-gray-600 text-white focus:bg-gray-600 hover:font-bold hover:bg-gray-900 px-5 " />
+          <input value={form.site} onChange={handleChange} name='site' type="text" placeholder="Website Name" className="site p-2 rounded-full w-56 h-8 bg-gray-700 border border-gray-600 text-white focus:bg-gray-600 hover:font-bold hover:bg-gray-900 px-5 " />
+          <input value={form.username} onChange={handleChange} name='username' type="text" placeholder="Username" className="username p-2 rounded-full w-56 h-8 bg-gray-700 border border-gray-600 text-white focus:bg-gray-600 hover:font-bold hover:bg-gray-900 px-5 " />
+          <div className="relative w-56">
+            <input
+              ref={passwordRef}
+              value={form.password}
+              onChange={handleChange}
+              name="password"
+              type="password"
+              placeholder="password"
+              className="password p-2 rounded-full w-full h-8 bg-gray-700 border border-gray-600 text-white focus:bg-gray-600 hover:font-bold hover:bg-gray-900 px-5"
+            />
+            <span
+              onClick={showPassword}
+              className="absolute right-3 top-[20px] transform -translate-y-1/2 cursor-pointer"
+            >
+              <lord-icon
+                src="https://cdn.lordicon.com/dicvhxpz.json"
+                trigger="click"
+                stroke="bold"
+                state="hover-cross"
+                colors="primary:#16c72e,secondary:#30e849"
+                style={{ width: "25px", height: "25px" }}
+              ></lord-icon>
+            </span>
+          </div>
+
+          <div
+            id="saveBtn"
+            onClick={savePassword}
+            className="mt-[-10px] px-5 py-5 rounded-full bg-slate-500 text-white font-semibold shadow-md active:scale-95 transition-all border-2 w-42 h-10 flex items-center justify-center gap-1 cursor-pointer"
+          >
+            <lord-icon
+              src="https://cdn.lordicon.com/gzqofmcx.json"
+              trigger="click"
+              target="#saveBtn"
+              colors="primary:#16c72e"
+              style={{ width: 20, height: 20 }}
+            />
+            <button className="text-[14px] cursor-pointer">Save Password</button>
+          </div>
+        </div>
+
+        {/* Saved Passwords Table */}
+        <div className="savepassword w-11/12 bg-white rounded-4xl shadow-lg p-2 mx-1 my-1 text-black flex flex-col items-center border-2 ">
+
+         <div className="saved w-11/12 bg-white rounded-full px-5 mx-10 flex flex-row justify-baseline gap-50 h-12 ">
+            <h1 className='flex flex-col w-2/5 bg-white rounded-full px-10 m-2 text-2xl '>Saved Passwords:</h1>
+
+            <input
+              type="text"
+              placeholder="Enter Your Website Name or Username to Search"
+              className="w-2/6 h-8 px-5 py-3 rounded-full bg-gray-500 text-white placeholder-gray-300 focus:outline-none hover:bg-gray-900 transition duration-300" />
+
+
+
+          </div>
+          
+          {passwordArray.length === 0 ? (
+            <p className="text-gray-600 mt-5 font-medium">No password to be shown</p>
+          ) : (
+            <div className="w-11/12 h-full bg-gray-200 rounded-2xl px-5 mx-auto my-4 border-2 overflow-x-auto">
+              <table className="table-auto border-collapse border border-gray-300 w-full text-sm text-left">
+                <thead className="bg-green-400 font-bold">
+                  <tr>
+                    <th className="border border-gray-300 px-4 py-2 w-[17%]">Website</th>
+                    <th className="border border-gray-300 px-4 py-2 w-[30%]">Link</th>
+                    <th className="border border-gray-300 px-4 py-2 w-[22%]">Username</th>
+                    <th className="border border-gray-300 px-4 py-2 w-[20%]">Password</th>
+                    <th className="border border-gray-300 px-4 py-2 text-center w-[10%]">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {passwordArray.map((item, index) => (
+                    <tr key={index} className="hover:bg-gray-50 transition ">
+                      <td className="border border-gray-300 px-4 py-2 bg-slate-400">{item.site}</td>
+                      <td className="border border-gray-300 px-4 py-2">{item.link}</td>
+                      <td className="border border-gray-300 px-4 py-2 bg-blue-200">{item.username}</td>
+                      <td className="border border-gray-300 px-4 py-2 bg-amber-200">{item.password}</td>
+                      <td>
+                        <button className="flex items-center justify-center gap-5 font-bold text-red-600 transition duration-200 ease-in-out hover:underline">
+                          <span onClick={() => editPassword(item.id)}>
+                            <lord-icon
+                              className="mx-2"
+                              id="deleteIcon"
+                              src="https://cdn.lordicon.com/exymduqj.json"
+                              trigger="click"
+                              stroke="bold"
+                              state="hover-line"
+                              colors="primary:#000000,secondary:#109121"
+                              style={{ width: "20px", height: "20px" }}
+                            ></lord-icon>
+                          </span>
+                          <span
+                            className="transition duration-100 ease-in-out transform active:scale-125"
+                            onClick={() => deletePassword(item.id)}
+                          >
+                            Delete
+                          </span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Manager;
